@@ -1,0 +1,39 @@
+<%#
+name: Host - Host Summary Report
+snippet: false
+template_inputs:
+- name: Hosts filter
+  required: false
+  input_type: user
+  description: Limit the report only on hosts found by this search query. Keep empty
+    for report on all available hosts.
+  advanced: false
+  value_type: search
+  resource_type: Host
+model: ReportTemplate
+require:
+- plugin: katello
+  version: 3.9.0
+-%>
+<%- report_headers 'Host Name', 'OS', 'Kernel', 'IP Address', 'Organization', 'Lifecycle Environment', 'Content View', 'Virtual', 'Guest of Host', 'Arch', 'Sockets', 'Cores', 'SLA', 'Owner', 'Products' -%>
+<%- load_hosts(search: input('Hosts filter'), includes: [:lifecycle_environments, :host_collections, :operatingsystem, :architecture, :content_views, :organization, :reported_data, :interfaces ]).each_record do |host| -%>
+<%-   report_row(
+          'Host Name': host.name,
+          'OS': host.operatingsystem,
+          'Kernel': host.facts['uname::release'],
+          'IP Address': host.ip,
+          'Organization': host.organization,
+          'Lifecycle Environment': host.lifecycle_environments,
+          'Content View': host.content_views,
+          'Version': host_content_facet,
+          'Virtual': host.virtual,
+          'Guest of Host': host.hypervisor_host,
+          'Arch': host.architecture,
+          'Sockets': host.sockets,
+          'Cores': host.cores,
+          'SLA': host_sla(host),
+          'Owner': host.owner, 
+          'Products': host_products_names(host)
+      ) -%>
+<%- end -%>
+<%= report_render -%>
